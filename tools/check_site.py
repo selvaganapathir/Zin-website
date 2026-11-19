@@ -19,6 +19,7 @@ class PageParser(HTMLParser):
         self.title_depth = 0
         self.title_text = []
         self.json_ld = []
+        self.json_ld_active = False
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
@@ -36,15 +37,18 @@ class PageParser(HTMLParser):
             self.title_depth += 1
         if tag == "script" and attrs.get("type") == "application/ld+json":
             self.json_ld.append("")
+            self.json_ld_active = True
 
     def handle_endtag(self, tag):
         if tag == "title" and self.title_depth:
             self.title_depth -= 1
+        if tag == "script":
+            self.json_ld_active = False
 
     def handle_data(self, data):
         if self.title_depth:
             self.title_text.append(data)
-        if self.json_ld:
+        if self.json_ld_active:
             self.json_ld[-1] += data
 
 def fail(message):
@@ -55,7 +59,8 @@ def main():
     ok = True
     html_path = ROOT / "index.html"
     if not html_path.is_file():
-        return 1 if fail("index.html is missing") else 0
+        fail("index.html is missing")
+        return 1
     html = html_path.read_text(encoding="utf-8")
     parser = PageParser()
     parser.feed(html)
