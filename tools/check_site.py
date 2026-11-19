@@ -70,7 +70,7 @@ def main():
         ok = fail("Open Graph title should match the page title") and ok
     if parser.meta.get("og:url") != BASE:
         ok = fail("Open Graph URL does not match the canonical site URL") and ok
-    if not re.search(r'<link\\s+rel=["\\']canonical["\\']\\s+href=', html):
+    if not re.search(r'<link\s+rel=["\']canonical["\']\s+href=', html):
         ok = fail("canonical link is missing") and ok
     for payload in parser.json_ld:
         try:
