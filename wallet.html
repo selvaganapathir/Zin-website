@@ -1,93 +1,16 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0b1018">
-  <meta name="description" content="Explore the ZIN demo wallet. A local-only encrypted wallet interface for simulated ZIN credits.">
-  <title>ZIN Wallet — Demo</title>
-  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="wallet.css">
-  <script src="wallet.js" defer></script>
-</head>
-<body>
-  <header class="wallet-header">
-    <a class="brand" href="./" aria-label="ZIN home"><span class="brand-mark">Z</span><span>ZIN<span class="brand-dot">.</span></span></a>
-    <div class="header-right"><span class="network-pill"><i></i> DEMO MODE</span><a class="back-link" href="./">Back to website ↗</a></div>
-  </header>
-
-  <main class="app-shell">
-    <section class="intro-row">
-      <div><div class="eyebrow">ZIN DIGITAL WALLET</div><h1>Your assets.<br><span>One simple view.</span></h1></div>
-      <div class="demo-alert"><span>!</span><p><strong>Simulation only.</strong> No real ZIN, blockchain connection or monetary value.</p></div>
-    </section>
-
-    <section class="vault-gate card" id="vault-gate">
-      <div class="gate-icon">⌑</div>
-      <div class="gate-copy"><div class="eyebrow">PRIVATE DEMO VAULT</div><h2 id="gate-title">Create your demo wallet</h2><p id="gate-description">Protect this browser's simulated wallet data with a password. Your encrypted vault stays on this device.</p></div>
-      <form id="vault-form" class="vault-form">
-        <label for="vault-password" id="password-label">Create a password</label>
-        <input id="vault-password" type="password" minlength="8" autocomplete="new-password" placeholder="At least 8 characters" required>
-        <label for="vault-confirm" id="confirm-label">Confirm password</label>
-        <input id="vault-confirm" type="password" minlength="8" autocomplete="new-password" placeholder="Enter it again" required>
-        <button class="primary-button" type="submit" id="vault-submit">Create encrypted vault <span>→</span></button>
-        <button class="text-button hidden" type="button" id="switch-vault-mode">I already have a vault · Unlock</button>
-        <p class="form-message" id="vault-message" role="status" aria-live="polite"></p>
-      </form>
-      <div class="crypto-note"><span>⌑</span> Password-based encryption · PBKDF2-SHA-256 + AES-256-GCM · Local browser storage</div>
-    </section>
-
-    <section class="wallet-dashboard hidden" id="wallet-dashboard" aria-live="polite">
-      <div class="dashboard-top"><div><span class="eyebrow">MY DEMO WALLET</span><h2>Portfolio</h2></div><button class="lock-button" id="lock-wallet" type="button">♙ Lock wallet</button></div>
-      <article class="balance-card">
-        <div class="balance-card-top"><span class="balance-label">TOTAL DEMO BALANCE</span><span class="coin-mark">Z</span></div>
-        <div class="balance-amount"><strong id="wallet-balance">1,000.00</strong><span>DEMO ZIN</span></div>
-        <div class="balance-bottom"><span class="fake-change">● Local simulation</span><span id="wallet-id-short">DEMO ACCOUNT</span></div>
-      </article>
-
-      <div class="action-grid">
-        <button class="action-button active" data-tab="send" type="button"><span class="action-icon">↗</span><b>Send</b></button>
-        <button class="action-button" data-tab="receive" type="button"><span class="action-icon">↙</span><b>Receive</b></button>
-        <button class="action-button" data-tab="activity" type="button"><span class="action-icon">↻</span><b>Activity</b></button>
-      </div>
-
-      <section class="panel tab-panel" id="send-panel">
-        <div class="panel-heading"><div><span class="eyebrow">TRANSFER DEMO CREDITS</span><h3>Send ZIN</h3></div><span class="panel-symbol">↗</span></div>
-        <form id="send-form" class="send-form">
-          <label for="recipient">Recipient demo address or label</label>
-          <input id="recipient" maxlength="64" placeholder="ZIN-DEMO-… or a name" required>
-          <label for="amount">Amount</label>
-          <div class="amount-input"><input id="amount" type="number" min="0.01" max="1000000" step="0.01" placeholder="0.00" required><span>DEMO ZIN</span></div>
-          <div class="available-line"><span>Available</span><b id="available-balance">1,000.00 DEMO ZIN</b></div>
-          <button class="primary-button" type="submit">Confirm demo transfer <span>→</span></button>
-          <p class="form-message" id="send-message" role="status" aria-live="polite">Transfers only change this local demo balance.</p>
-        </form>
-      </section>
-
-      <section class="panel tab-panel hidden" id="receive-panel">
-        <div class="panel-heading"><div><span class="eyebrow">YOUR DEMO IDENTIFIER</span><h3>Receive ZIN</h3></div><span class="panel-symbol">↙</span></div>
-        <p class="panel-description">Share this fictional demo identifier to identify this browser wallet in the simulation. It cannot receive real cryptocurrency.</p>
-        <div class="receive-address"><span>DEMO RECEIVING ADDRESS</span><code id="receive-address">ZIN-DEMO-…</code></div>
-        <button class="secondary-button" id="copy-address" type="button">▣ Copy demo address</button>
-        <p class="form-message" id="receive-message" role="status" aria-live="polite"></p>
-      </section>
-
-      <section class="panel tab-panel hidden" id="activity-panel">
-        <div class="panel-heading"><div><span class="eyebrow">RECENT TRANSFERS</span><h3>Activity</h3></div><span class="panel-symbol">↻</span></div>
-        <div class="activity-list" id="activity-list"><div class="empty-state"><span>↻</span><b>No activity yet</b><p>Your simulated transfers will appear here.</p></div></div>
-      </section>
-
-      <div class="security-row"><span>⌑</span><p><strong>Encrypted local demo vault</strong><br>Your password is not sent to a server. Lock the wallet when you finish.</p><button id="reset-wallet" type="button">Reset</button></div>
-    </section>
-
-    <footer class="wallet-footer"><span>© ZIN PROJECT · EXPERIMENTAL PREVIEW</span><a href="https://github.com/selvaganapathir/zin-blockchain" target="_blank" rel="noopener">Blockchain development ↗</a></footer>
-  </main>
-
-  <dialog class="confirm-dialog" id="reset-dialog">
-    <form method="dialog"><span class="eyebrow">RESET DEMO VAULT</span><h3>Delete this local demo wallet?</h3><p>This permanently removes the encrypted demo data stored by this page on this browser. This cannot be undone.</p><div class="dialog-actions"><button class="secondary-button" value="cancel">Cancel</button><button class="danger-button" id="confirm-reset" value="confirm">Delete demo vault</button></div></form>
-  </dialog>
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b1018"><meta name="description" content="ZIN experimental demo wallet with recovery phrase, proof-of-work mining and a local testnet explorer."><title>ZIN Wallet & Miner — Testnet Demo</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="wallet.css"><script src="wallet.js" defer></script></head>
+<body><header class="wallet-header"><a class="brand" href="./"><span class="brand-mark">Z</span><span>ZIN<span class="brand-dot">.</span></span></a><div class="header-right"><span class="network-pill"><i></i> LOCAL TESTNET</span><a class="back-link" href="testnet.html">Explorer ↗</a><a class="back-link" href="./">Home ↗</a></div></header>
+<main class="app-shell"><section class="intro-row"><div><div class="eyebrow">ZIN DIGITAL WALLET</div><h1>Your keys.<br><span>Your testnet.</span></h1></div><div class="demo-alert"><span>!</span><p><strong>Experimental local simulation.</strong> Recovery phrase and coins are demo-only. Data stays in this browser profile; it is not a shared public network.</p></div></section>
+<section class="vault-gate card" id="vault-gate"><div class="gate-icon">⌑</div><div class="gate-copy"><div class="eyebrow">ENCRYPTED DEMO VAULT</div><h2 id="gate-title">Create your demo wallet</h2><p id="gate-description">Create a local encrypted wallet and save its 12-word demo recovery phrase.</p></div><form id="vault-form" class="vault-form"><label for="vault-password" id="password-label">Create a password</label><input id="vault-password" type="password" minlength="8" autocomplete="new-password" placeholder="At least 8 characters" required><label for="vault-confirm" id="confirm-label">Confirm password</label><input id="vault-confirm" type="password" minlength="8" autocomplete="new-password" placeholder="Enter it again" required><button class="primary-button" type="submit" id="vault-submit">Create encrypted wallet →</button><button class="text-button hidden" type="button" id="switch-vault-mode">I already have a vault · Unlock</button><p class="form-message" id="vault-message" role="status" aria-live="polite"></p></form><div class="crypto-note">PBKDF2-SHA-256 · AES-256-GCM · Browser-local storage</div></section>
+<section class="panel hidden" id="seed-backup"><div class="eyebrow">BACK UP YOUR DEMO RECOVERY PHRASE</div><h3>Write these 12 words down</h3><p>This custom ZIN demo phrase is not BIP-39 and cannot restore real cryptocurrency. Anyone with it can recreate this demo address.</p><code id="seed-phrase-display" class="seed-phrase"></code><button class="secondary-button" id="copy-seed" type="button">Copy recovery phrase</button><p id="seed-message" class="form-message" role="status"></p><button class="primary-button" id="seed-backup-done" type="button">I saved my phrase</button></section>
+<section class="wallet-dashboard hidden" id="wallet-dashboard" aria-live="polite"><div class="dashboard-top"><div><span class="eyebrow">MY TESTNET WALLET</span><h2>Portfolio</h2></div><button class="lock-button" id="lock-wallet" type="button">♙ Lock wallet</button></div>
+<article class="balance-card"><div class="balance-card-top"><span class="balance-label">TESTNET BALANCE</span><span class="coin-mark">Z</span></div><div class="balance-amount"><strong id="wallet-balance">1,000.00</strong><span>TEST ZIN</span></div><div class="balance-bottom"><span class="fake-change">● Local chain</span><span id="wallet-id-short">DEMO ACCOUNT</span></div></article>
+<div class="action-grid"><button class="action-button active" data-tab="send" type="button"><span class="action-icon">↗</span><b>Send</b></button><button class="action-button" data-tab="receive" type="button"><span class="action-icon">↙</span><b>Receive</b></button><button class="action-button" data-tab="activity" type="button"><span class="action-icon">↻</span><b>Activity</b></button><button class="action-button" data-tab="mine" type="button"><span class="action-icon">⛏</span><b>Mine</b></button></div>
+<section class="panel tab-panel" id="send-panel"><div class="panel-heading"><div><span class="eyebrow">TESTNET TRANSFER</span><h3>Send test ZIN</h3></div></div><form id="send-form" class="send-form"><label for="recipient">Recipient address or label</label><input id="recipient" maxlength="64" placeholder="ZIN-DEMO-… or a name" required><label for="amount">Amount</label><div class="amount-input"><input id="amount" type="number" min="0.01" max="1000000" step="0.01" placeholder="0.00" required><span>TEST ZIN</span></div><div class="available-line"><span>Available</span><b id="available-balance">1,000.00 TEST ZIN</b></div><button class="primary-button" type="submit">Queue testnet transfer →</button><p class="form-message" id="send-message" role="status" aria-live="polite">Transfers are added to this browser's pending pool.</p></form></section>
+<section class="panel tab-panel hidden" id="receive-panel"><div class="panel-heading"><div><span class="eyebrow">YOUR DEMO IDENTIFIER</span><h3>Receive test ZIN</h3></div></div><p class="panel-description">Share this local demo address for testnet experiments. It cannot receive real cryptocurrency.</p><div class="receive-address"><span>DEMO ADDRESS</span><code id="receive-address">ZIN-DEMO-…</code></div><button class="secondary-button" id="copy-address" type="button">Copy address</button><button class="secondary-button" id="show-seed" type="button">Show recovery phrase</button><div id="seed-panel" class="hidden"><code id="seed-phrase-display" class="seed-phrase"></code><p class="form-message">Never enter a real wallet phrase here.</p></div><p class="form-message" id="receive-message" role="status"></p></section>
+<section class="panel tab-panel hidden" id="activity-panel"><div class="panel-heading"><div><span class="eyebrow">WALLET HISTORY</span><h3>Activity</h3></div></div><div class="activity-list" id="activity-list"></div></section>
+<section class="panel tab-panel hidden" id="mine-panel"><div class="panel-heading"><div><span class="eyebrow">PROOF OF WORK</span><h3>Mine a block</h3></div></div><div class="chain-stats"><div><small>HEIGHT</small><b id="chain-height">0</b></div><div><small>DIFFICULTY</small><b id="chain-difficulty">1</b></div><div><small>PENDING TX</small><b id="pending-count">0</b></div></div><label for="difficulty">Mining difficulty · leading zero hex characters</label><select id="difficulty"><option value="1">1 · Very easy</option><option value="2">2 · Easy</option><option value="3" selected>3 · Normal</option><option value="4">4 · Hard</option><option value="5">5 · Very hard</option></select><p class="form-message" id="mining-status" role="status">Ready to mine</p><div class="mining-actions"><button class="primary-button" id="start-mining" type="button">Start mining · reward 5 TEST ZIN</button><button class="secondary-button" id="stop-mining" type="button">Stop</button></div><h4>Latest blocks</h4><div id="wallet-block-list" class="block-list"></div><a id="chain-link" class="secondary-button" href="testnet.html">Open Testnet Explorer ↗</a></section>
+<div class="security-row"><span>⌑</span><p><strong>Encrypted demo wallet</strong><br>Do not use real recovery phrases or funds. Reset removes this wallet only.</p><button id="reset-wallet" type="button">Reset</button></div></section>
+<footer class="wallet-footer"><span>© ZIN PROJECT · LOCAL TESTNET PREVIEW</span><a href="testnet.html">Testnet Explorer ↗</a><a href="https://github.com/selvaganapathir/zin-blockchain" target="_blank" rel="noopener">Blockchain source ↗</a></footer></main>
+<dialog class="confirm-dialog" id="reset-dialog"><form method="dialog"><span class="eyebrow">RESET DEMO VAULT</span><h3>Delete this local wallet?</h3><p>This removes the encrypted wallet stored in this browser. The local testnet chain remains available.</p><div class="dialog-actions"><button class="secondary-button" value="cancel">Cancel</button><button class="danger-button" id="confirm-reset" value="confirm">Delete wallet</button></div></form></dialog></body></html>
