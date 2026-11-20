@@ -1,46 +1,50 @@
-# ZIN Project Website
+# ZIN — Experimental Blockchain Project
 
-Public, mobile-responsive informational website for the ZIN experimental blockchain project.
+<div align="center">
 
-**Live website:** https://selvaganapathir.github.io/Zin-website/
+**A mobile-first blockchain project, developed transparently and incrementally.**
 
-## Publish with GitHub Pages
+[Open the live website](https://selvaganapathir.github.io/Zin-website/) · [Open wallet demo](https://selvaganapathir.github.io/Zin-website/wallet.html) · [Open local testnet explorer](https://selvaganapathir.github.io/Zin-website/testnet.html)
 
-1. Open **Settings → Pages** in this repository.
-2. Under **Build and deployment**, choose **Deploy from a branch**.
-3. Select branch `main` and folder `/(root)`.
-4. Save and wait for the Pages deployment workflow to finish.
+</div>
 
-## Website files
+---
 
-- `index.html` — site content, SEO metadata and structured data
-- `styles.css` — responsive styling
-- `script.js` — accessible mobile navigation and footer year
-- `assets/favicon.svg` — site icon
-- `robots.txt` and `sitemap.xml` — search crawler guidance
-- `docs/ROADMAP.md` — public engineering roadmap
-- `docs/ANALYTICS-SETUP.md` — analytics and Search Console setup
-- `tools/check_site.py` — dependency-free static checks
-- `.github/workflows/site-checks.yml` — automated checks on pushes and pull requests
+## What visitors should know
 
-## Search visibility
+This repository contains the **public website** for ZIN. The website is the product-facing entry point; the source repository is for contributors and developers.
 
-The homepage includes a canonical URL, search description, Open Graph/Twitter preview metadata and basic WebSite structured data. The sitemap is available at:
+- **Website:** project overview, technical direction, roadmap and verified status.
+- **Wallet demo:** browser-local encrypted demo wallet, custom demo recovery phrase, transfer queue and proof-of-work block mining.
+- **Explorer:** inspect, search, export and import the local test chain saved by the browser.
 
-https://selvaganapathir.github.io/Zin-website/sitemap.xml
+## Try the browser demo
 
-Submit that sitemap through Google Search Console after verifying ownership. Search engines decide whether and when to index pages; metadata and sitemap submission do not guarantee rankings.
+1. Open the [ZIN wallet](https://selvaganapathir.github.io/Zin-website/wallet.html).
+2. Create a password and securely write down the generated 12-word **demo-only** recovery phrase.
+3. Queue a test transfer, choose mining difficulty and mine a block.
+4. Open the [Testnet Explorer](https://selvaganapathir.github.io/Zin-website/testnet.html) to inspect blocks and transactions.
 
-## Analytics
+### Important network limitation
 
-No visitor tracking is installed by default. See [docs/ANALYTICS-SETUP.md](docs/ANALYTICS-SETUP.md) for a privacy-conscious setup path. Add a provider only after creating the account and reviewing applicable privacy requirements.
+The wallet, proof-of-work miner and explorer currently use browser JavaScript and this site's origin-local browser storage. Data persists in the same browser profile on the same device and can be exported/imported as JSON. **It is not shared between visitors or devices and is not a peer-to-peer blockchain testnet.** A shared testnet requires independently running nodes and a persistent network API/backend; GitHub Pages alone is static hosting.
 
-## Accuracy and safety
+The recovery phrase is a custom demo format, **not BIP-39**, and does not control real cryptocurrency. Test ZIN has no monetary value. Never enter a real wallet seed phrase or send funds.
 
-This site intentionally describes ZIN as an early-stage experimental project. It does not claim that a production blockchain node, peer-to-peer network, mining, public testnet, mainnet, or production wallet exists. Do not advertise a token for sale or invite users to send funds. Update the project status only when implementation and testing evidence supports the change.
+## Repository layout
 
-The website is a separate public repository. Keep private source code, credentials, API keys, private keys, wallet recovery phrases and confidential material out of this repository.
+- `index.html`, `styles.css`, `script.js` — public project website
+- `wallet.html`, `wallet.css`, `wallet.js` — standalone wallet and local proof-of-work demo
+- `testnet.html`, `testnet.js` — local chain explorer and JSON import/export
+- `docs/ROADMAP.md` — engineering roadmap
+- `.github/workflows/` — automated website and wallet checks
 
-## External font
+## Development
 
-The design uses Google Fonts (DM Sans and Space Grotesk) when available. The site remains readable with local sans-serif fallbacks.
+The public site is deployed through GitHub Pages from `main` at `/(root)`. Automated checks validate static references and wallet wiring.
+
+The protocol implementation remains in the separate private repository: [zin-blockchain](https://github.com/selvaganapathir/zin-blockchain).
+
+---
+
+**Project status:** experimental. A browser demo is not evidence of a deployed public network, production wallet, mainnet or token offering.

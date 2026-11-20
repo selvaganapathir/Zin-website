@@ -1,179 +1,45 @@
 (() => {
-  'use strict';
-  const STORE_KEY = 'zin-wallet-vault-v2';
-  const ITERATIONS = 310000;
-  const encoder = new TextEncoder();
-  const $ = id => document.getElementById(id);
-  const gate = $('vault-gate');
-  const dashboard = $('wallet-dashboard');
-  const form = $('vault-form');
-  const password = $('vault-password');
-  const confirmPassword = $('vault-confirm');
-  const gateMessage = $('vault-message');
-  const sendMessage = $('send-message');
-  let wallet = null;
-  let vaultMode = 'create';
-
-  const toBase64 = bytes => {
-    let binary = '';
-    bytes.forEach(byte => { binary += String.fromCharCode(byte); });
-    return btoa(binary);
-  };
-  const fromBase64 = value => Uint8Array.from(atob(value), char => char.charCodeAt(0));
-  const randomBytes = length => {
-    const bytes = new Uint8Array(length);
-    crypto.getRandomValues(bytes);
-    return bytes;
-  };
-  const format = cents => (cents / 100).toLocaleString(undefined, {minimumFractionDigits:2,maximumFractionDigits:2});
-  const setMessage = (node, message, kind) => {
-    node.textContent = message;
-    node.className = 'form-message' + (kind ? ' ' + kind : '');
-  };
-  const deriveKey = async (secret, salt) => {
-    const material = await crypto.subtle.importKey('raw', encoder.encode(secret), 'PBKDF2', false, ['deriveKey']);
-    return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:ITERATIONS,hash:'SHA-256'},material,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
-  };
-  const makeDemoAddress = async () => {
-    const digest = await crypto.subtle.digest('SHA-256', randomBytes(32));
-    return 'ZIN-DEMO-' + Array.from(new Uint8Array(digest).slice(0,10), b => b.toString(16).padStart(2,'0')).join('').toUpperCase();
-  };
-  const saveEncrypted = async secret => {
-    const salt = randomBytes(16);
-    const iv = randomBytes(12);
-    const key = await deriveKey(secret, salt);
-    const plaintext = encoder.encode(JSON.stringify(wallet));
-    const ciphertext = await crypto.subtle.encrypt({name:'AES-GCM',iv},key,plaintext);
-    localStorage.setItem(STORE_KEY,JSON.stringify({version:2,iterations:ITERATIONS,salt:toBase64(salt),iv:toBase64(iv),ciphertext:toBase64(new Uint8Array(ciphertext))}));
-  };
-  const unlockEncrypted = async secret => {
-    const envelope = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
-    if (!envelope || envelope.version !== 2 || envelope.iterations !== ITERATIONS) throw new Error('This wallet vault is not recognised. Reset it and create a new demo vault.');
-    const key = await deriveKey(secret,fromBase64(envelope.salt));
-    const plaintext = await crypto.subtle.decrypt({name:'AES-GCM',iv:fromBase64(envelope.iv)},key,fromBase64(envelope.ciphertext));
-    const parsed = JSON.parse(new TextDecoder().decode(plaintext));
-    if (!parsed || typeof parsed.address !== 'string' || !Number.isSafeInteger(parsed.balanceCents) || parsed.balanceCents < 0 || !Array.isArray(parsed.transactions)) throw new Error('Wallet data could not be validated.');
-    wallet = parsed;
-  };
-  const hasVault = () => {
-    try { return Boolean(localStorage.getItem(STORE_KEY)); } catch (_) { return false; }
-  };
-  const showGate = () => {
-    gate.classList.remove('hidden');
-    dashboard.classList.add('hidden');
-    $('gate-title').textContent = vaultMode === 'create' ? 'Create your demo wallet' : 'Unlock your demo wallet';
-    $('gate-description').textContent = vaultMode === 'create'
-      ? 'Protect this browser\'s simulated wallet data with a password. Your encrypted vault stays on this device.'
-      : 'Enter the password you created for this browser\'s encrypted demo vault.';
-    $('password-label').textContent = vaultMode === 'create' ? 'Create a password' : 'Wallet password';
-    $('confirm-label').classList.toggle('hidden',vaultMode !== 'create');
-    confirmPassword.classList.toggle('hidden',vaultMode !== 'create');
-    confirmPassword.required = vaultMode === 'create';
-    password.autocomplete = vaultMode === 'create' ? 'new-password' : 'current-password';
-    $('vault-submit').innerHTML = vaultMode === 'create' ? 'Create encrypted vault <span>→</span>' : 'Unlock wallet <span>→</span>';
-    $('switch-vault-mode').classList.toggle('hidden',!hasVault() && vaultMode === 'create');
-    setMessage(gateMessage,'','');
-  };
-  const showWallet = () => {
-    gate.classList.add('hidden');
-    dashboard.classList.remove('hidden');
-    $('wallet-balance').textContent = format(wallet.balanceCents);
-    $('available-balance').textContent = format(wallet.balanceCents) + ' DEMO ZIN';
-    $('wallet-id-short').textContent = wallet.address.slice(0,19) + '…';
-    $('receive-address').textContent = wallet.address;
-    renderActivity();
-  };
-  const renderActivity = () => {
-    const list = $('activity-list');
-    list.replaceChildren();
-    if (!wallet.transactions.length) {
-      const empty = document.createElement('div'); empty.className = 'empty-state';
-      const icon = document.createElement('span'); icon.textContent = '↻';
-      const title = document.createElement('b'); title.textContent = 'No activity yet';
-      const description = document.createElement('p'); description.textContent = 'Your simulated transfers will appear here.';
-      empty.append(icon,title,description); list.appendChild(empty); return;
-    }
-    wallet.transactions.slice().reverse().forEach(tx => {
-      const row = document.createElement('div'); row.className = 'activity-item';
-      const left = document.createElement('div'); left.className = 'activity-left';
-      const icon = document.createElement('span'); icon.className = 'activity-icon'; icon.textContent = '↗';
-      const copy = document.createElement('div'); copy.className = 'activity-copy';
-      const title = document.createElement('b'); title.textContent = 'Sent to ' + tx.recipient;
-      const date = document.createElement('small'); date.textContent = new Date(tx.time).toLocaleString();
-      copy.append(title,date); left.append(icon,copy);
-      const amount = document.createElement('span'); amount.className = 'activity-amount'; amount.textContent = '−' + format(tx.amountCents) + ' DEMO ZIN';
-      row.append(left,amount); list.appendChild(row);
-    });
-  };
-  const switchTab = name => {
-    document.querySelectorAll('.action-button').forEach(button => button.classList.toggle('active',button.dataset.tab === name));
-    ['send','receive','activity'].forEach(tab => $(tab + '-panel').classList.toggle('hidden',tab !== name));
-  };
-
-  $('switch-vault-mode').addEventListener('click',() => {
-    vaultMode = 'unlock'; confirmPassword.value = ''; password.value = ''; showGate();
-  });
-  form.addEventListener('submit',async event => {
-    event.preventDefault();
-    if (!window.crypto || !crypto.subtle || !window.isSecureContext) {
-      setMessage(gateMessage,'Secure WebCrypto is unavailable. Open this page over HTTPS in a supported browser.','error'); return;
-    }
-    const secret = password.value;
-    if (secret.length < 8) { setMessage(gateMessage,'Use a password with at least 8 characters.','error'); return; }
-    const submit = $('vault-submit'); submit.disabled = true;
-    try {
-      if (vaultMode === 'create') {
-        if (secret !== confirmPassword.value) throw new Error('The passwords do not match.');
-        if (hasVault()) throw new Error('A demo vault already exists here. Unlock it or reset it first.');
-        wallet = {address:await makeDemoAddress(),balanceCents:100000,transactions:[]};
-        await saveEncrypted(secret);
-      } else {
-        await unlockEncrypted(secret);
-      }
-      passwordForSession = secret; password.value = ''; confirmPassword.value = ''; showWallet();
-    } catch (error) {
-      wallet = null;
-      const message = vaultMode === 'unlock' && error.name === 'OperationError' ? 'Incorrect password. Please try again.' : (error.message || 'Could not open the wallet vault.');
-      setMessage(gateMessage,message,'error');
-    } finally { submit.disabled = false; }
-  });
-
-  document.querySelectorAll('.action-button').forEach(button => button.addEventListener('click',() => switchTab(button.dataset.tab)));
-  $('send-form').addEventListener('submit',async event => {
-    event.preventDefault();
-    if (!wallet) return;
-    const recipient = $('recipient').value.trim();
-    const raw = $('amount').value.trim();
-    const amount = Number(raw);
-    if (!recipient) { setMessage(sendMessage,'Enter a recipient label or demo ID.','error'); return; }
-    if (!Number.isFinite(amount) || amount <= 0 || !/^\d+(\.\d{1,2})?$/.test(raw)) { setMessage(sendMessage,'Enter a valid amount with up to 2 decimal places.','error'); return; }
-    const cents = Math.round(amount * 100);
-    if (!Number.isSafeInteger(cents) || cents > wallet.balanceCents) { setMessage(sendMessage,'Insufficient demo balance.','error'); return; }
-    const submit = event.submitter; if (submit) submit.disabled = true;
-    try {
-      const previousBalance = wallet.balanceCents;
-      wallet.balanceCents -= cents;
-      wallet.transactions.push({recipient:recipient.slice(0,64),amountCents:cents,time:new Date().toISOString()});
-      try { await saveEncrypted(passwordForSession); }
-      catch (error) { wallet.balanceCents = previousBalance; wallet.transactions.pop(); throw error; }
-      showWallet(); $('recipient').value = ''; $('amount').value = '';
-      setMessage(sendMessage,'Demo transfer recorded in your encrypted local vault. No blockchain transaction was created.','success');
-    } catch (_) { setMessage(sendMessage,'Could not save this transfer. Your balance was not changed.','error'); }
-    finally { if (submit) submit.disabled = false; }
-  });
-
-  let passwordForSession = null;
-  $('copy-address').addEventListener('click',async () => {
-    try { await navigator.clipboard.writeText(wallet.address); setMessage($('receive-message'),'Demo address copied.','success'); }
-    catch (_) { setMessage($('receive-message'),'Clipboard unavailable. Select and copy the address above.','error'); }
-  });
-  $('lock-wallet').addEventListener('click',() => { wallet = null; passwordForSession = null; password.value = ''; confirmPassword.value = ''; vaultMode = 'unlock'; showGate(); });
-  const resetDialog = $('reset-dialog');
-  $('reset-wallet').addEventListener('click',() => resetDialog.showModal());
-  $('confirm-reset').addEventListener('click',() => {
-    try { localStorage.removeItem(STORE_KEY); } catch (_) {}
-    wallet = null; passwordForSession = null; vaultMode = 'create'; password.value = ''; confirmPassword.value = ''; showGate();
-  });
-  if (hasVault()) vaultMode = 'unlock';
-  showGate();
+'use strict';
+const STORE_KEY='zin-wallet-vault-v2', CHAIN_KEY='zin-testnet-chain-v1', ITERATIONS=310000;
+const encoder=new TextEncoder(), $=id=>document.getElementById(id);
+const gate=$('vault-gate'), dashboard=$('wallet-dashboard'), form=$('vault-form'), password=$('vault-password'), confirmPassword=$('vault-confirm'), gateMessage=$('vault-message'), sendMessage=$('send-message');
+let wallet=null, vaultMode='create', passwordForSession=null, mining=false;
+const prefixes=['amber','ancient','apple','arctic','autumn','bamboo','beacon','birch','blue','brave','breeze','bronze','calm','cedar','cinder','cobalt','coral','cosmic','crystal','dawn','delta','desert','distant','eager','earth','echo','ember','emerald','fable','falcon','fern','field','fire','fluent','forest','frost','gentle','glacier','golden','granite','harbor','hidden','hollow','honest','indigo','island','ivory','jade','juniper','keen','lagoon','lantern','lunar','maple','marble','meadow','mercury','misty','modern','moss','mountain','nectar','noble','ocean'];
+const suffixes=['acorn','arrow','atlas','badger','bay','bird','bloom','brook','cabin','canyon','caper','castle','cave','cloud','comet','copper','crane','creek','crown','daisy','dancer','dewdrop','dolphin','dragon','dream','drift','eagle','elm','falcon','feather','finch','flame'];
+const WORDS=prefixes.flatMap(p=>suffixes.map(s=>p+'-'+s));
+const b64=b=>{let s='';b.forEach(x=>s+=String.fromCharCode(x));return btoa(s)}, un64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const random=n=>{const b=new Uint8Array(n);crypto.getRandomValues(b);return b};
+const hex=b=>Array.from(new Uint8Array(b),x=>x.toString(16).padStart(2,'0')).join('');
+const hash=async s=>hex(await crypto.subtle.digest('SHA-256',encoder.encode(s)));
+const format=c=>(c/100).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+const msg=(n,t,k)=>{n.textContent=t;n.className='form-message'+(k?' '+k:'')};
+const derive=async(secret,salt)=>{const m=await crypto.subtle.importKey('raw',encoder.encode(secret),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:ITERATIONS,hash:'SHA-256'},m,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])};
+const makePhrase=()=>{const bytes=random(17);let bits='';bytes.forEach(b=>bits+=b.toString(2).padStart(8,'0'));bits=bits.slice(0,132);const words=[];for(let i=0;i<132;i+=11)words.push(WORDS[parseInt(bits.slice(i,i+11),2)]);return words.join(' ')};
+const validPhrase=s=>s.trim().toLowerCase().split(/\s+/).length===12&&s.trim().toLowerCase().split(/\s+/).every(w=>WORDS.includes(w));
+const makeAddress=async phrase=>'ZIN-DEMO-'+(await hash(phrase)).slice(0,24).toUpperCase();
+const save=async secret=>{const salt=random(16),iv=random(12),key=await derive(secret,salt),cipher=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,encoder.encode(JSON.stringify(wallet)));localStorage.setItem(STORE_KEY,JSON.stringify({version:2,iterations:ITERATIONS,salt:b64(salt),iv:b64(iv),ciphertext:b64(new Uint8Array(cipher))}))};
+const unlock=async secret=>{const e=JSON.parse(localStorage.getItem(STORE_KEY)||'null');if(!e||e.version!==2||e.iterations!==ITERATIONS)throw Error('Wallet vault is not recognised.');const key=await derive(secret,un64(e.salt)),plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:un64(e.iv)},key,un64(e.ciphertext)),v=JSON.parse(new TextDecoder().decode(plain));if(!v||typeof v.address!=='string'||!Number.isSafeInteger(v.balanceCents)||!Array.isArray(v.transactions))throw Error('Wallet data failed validation.');wallet=v};
+const hasVault=()=>{try{return !!localStorage.getItem(STORE_KEY)}catch(_){return false}};
+const chainLoad=()=>{try{const c=JSON.parse(localStorage.getItem(CHAIN_KEY)||'null');if(c&&Array.isArray(c.blocks)&&c.blocks.length)return c}catch(_){}return {blocks:[{height:0,previousHash:'0'.repeat(64),timestamp:'2026-01-01T00:00:00.000Z',transactions:[],nonce:0,difficulty:1,rewardCents:0,hash:'0'.repeat(64),miner:'ZIN GENESIS'}],pending:[]}};
+const chainSave=c=>localStorage.setItem(CHAIN_KEY,JSON.stringify(c));
+const chain=chainLoad();
+const showGate=()=>{gate.classList.remove('hidden');dashboard.classList.add('hidden');$('gate-title').textContent=vaultMode==='create'?'Create your demo wallet':vaultMode==='recover'?'Restore from recovery phrase':'Unlock your demo wallet';$('gate-description').textContent=vaultMode==='create'?'Create a local encrypted wallet and save its 12-word demo recovery phrase.':vaultMode==='recover'?'Restore your demo address from its 12 words and create a new encrypted local vault.':'Unlock the encrypted wallet stored in this browser.';$('password-label').textContent=vaultMode==='unlock'?'Wallet password':'Create a password';$('confirm-label').classList.toggle('hidden',vaultMode==='unlock');confirmPassword.classList.toggle('hidden',vaultMode==='unlock');confirmPassword.required=vaultMode!=='unlock';$('recovery-phrase').classList.toggle('hidden',vaultMode!=='recover');$('vault-submit').textContent=vaultMode==='create'?'Create encrypted wallet →':vaultMode==='recover'?'Restore wallet →':'Unlock wallet →';$('switch-vault-mode').classList.toggle('hidden',!hasVault()&&vaultMode==='create');msg(gateMessage,'','')};
+const showWallet=()=>{gate.classList.add('hidden');dashboard.classList.remove('hidden');$('wallet-balance').textContent=format(wallet.balanceCents);$('available-balance').textContent=format(wallet.balanceCents)+' DEMO ZIN';$('wallet-id-short').textContent=wallet.address.slice(0,19)+'…';$('receive-address').textContent=wallet.address;renderActivity();renderChain()};
+const renderActivity=()=>{const list=$('activity-list');list.replaceChildren();if(!wallet.transactions.length){const e=document.createElement('p');e.className='empty-state';e.textContent='No wallet activity yet.';list.append(e);return}wallet.transactions.slice().reverse().forEach(tx=>{const row=document.createElement('div');row.className='activity-item';row.textContent=(tx.type==='mining'?'Mining reward':'Sent to '+tx.recipient)+' · '+format(tx.amountCents)+' DEMO ZIN · '+new Date(tx.time).toLocaleString();list.append(row)})};
+const renderChain=()=>{const last=chain.blocks[chain.blocks.length-1];$('chain-height').textContent=last.height;$('chain-difficulty').textContent=last.difficulty;$('pending-count').textContent=chain.pending.length;$('chain-link').href='testnet.html';$('mining-status').textContent=mining?'Mining in progress…':'Ready to mine';$('mining-status').className='form-message';const out=$('wallet-block-list');out.replaceChildren();chain.blocks.slice().reverse().slice(0,5).forEach(b=>{const row=document.createElement('a');row.className='block-row';row.href='testnet.html#block-'+b.height;row.innerHTML='<b>#'+b.height+'</b><span>'+b.hash.slice(0,18)+'…</span><small>'+b.transactions.length+' tx</small>';out.append(row)})};
+const switchTab=n=>{document.querySelectorAll('.action-button').forEach(b=>b.classList.toggle('active',b.dataset.tab===n));['send','receive','activity','mine'].forEach(t=>$(t+'-panel').classList.toggle('hidden',t!==n))};
+$('switch-vault-mode').addEventListener('click',()=>{vaultMode='unlock';password.value='';confirmPassword.value='';showGate()});$('restore-wallet').addEventListener('click',()=>{vaultMode='recover';password.value='';confirmPassword.value='';showGate()});
+form.addEventListener('submit',async e=>{e.preventDefault();if(!crypto.subtle||!isSecureContext){msg(gateMessage,'Open this page over HTTPS in a supported browser.','error');return}const secret=password.value;if(secret.length<8){msg(gateMessage,'Use at least 8 password characters.','error');return}const btn=$('vault-submit');btn.disabled=true;try{if(vaultMode==='create'){if(secret!==confirmPassword.value)throw Error('Passwords do not match.');if(hasVault())throw Error('A vault already exists. Unlock it or reset it.');const phrase=makePhrase();wallet={address:await makeAddress(phrase),seedPhrase:phrase,balanceCents:100000,transactions:[]};await save(secret);$('seed-phrase-display').textContent=phrase;$('seed-backup').classList.remove('hidden')}else if(vaultMode==='recover'){if(secret!==confirmPassword.value)throw Error('Passwords do not match.');if(hasVault())throw Error('Reset the existing local vault before restoring.');const phrase=$('recovery-phrase').value.trim().toLowerCase();if(!validPhrase(phrase))throw Error('Enter the exact 12-word ZIN demo recovery phrase.');const address=await makeAddress(phrase);const history=chain.blocks.flatMap(b=>b.transactions||[]);const balance=history.reduce((sum,t)=>sum+(t.to===address||t.recipient===address?t.amountCents||0:0)-(t.from===address?t.amountCents||0:0),0);wallet={address,seedPhrase:phrase,balanceCents:Math.max(0,balance),transactions:[]};await save(secret)}else await unlock(secret);passwordForSession=secret;password.value='';confirmPassword.value='';showWallet()}catch(err){wallet=null;msg(gateMessage,err.name==='OperationError'?'Incorrect password.':err.message||'Could not open wallet.','error')}finally{btn.disabled=false}});
+$('seed-backup-done').addEventListener('click',()=>$('seed-backup').classList.add('hidden'));
+$('copy-seed').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(wallet.seedPhrase);msg($('seed-message'),'Recovery phrase copied. Keep it private.','success')}catch(_){msg($('seed-message'),'Select and copy the phrase manually.','error')}});
+$('show-seed').addEventListener('click',()=>{$('seed-phrase-reveal').textContent=wallet.seedPhrase||'This older vault has no recovery phrase. Create a new wallet to use recovery.';$('seed-panel').classList.toggle('hidden')});
+document.querySelectorAll('.action-button').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
+$('send-form').addEventListener('submit',async e=>{e.preventDefault();if(!wallet)return;const recipient=$('recipient').value.trim(),raw=$('amount').value.trim(),amount=Number(raw);if(!recipient||!Number.isFinite(amount)||amount<=0||!/^[0-9]+(\.[0-9]{1,2})?$/.test(raw)){msg(sendMessage,'Enter a valid recipient and amount.','error');return}const cents=Math.round(amount*100);if(cents>wallet.balanceCents){msg(sendMessage,'Insufficient demo balance.','error');return}const tx={type:'send',recipient:recipient.slice(0,64),amountCents:cents,time:new Date().toISOString()};wallet.balanceCents-=cents;wallet.transactions.push(tx);chain.pending.push({type:'transfer',from:wallet.address,to:tx.recipient,amountCents:cents,time:tx.time});try{await save(passwordForSession);chainSave(chain);showWallet();$('recipient').value='';$('amount').value='';msg(sendMessage,'Transfer queued in this browser testnet. Mine a block to confirm it.','success')}catch(_){wallet.balanceCents+=cents;wallet.transactions.pop();chain.pending.pop();msg(sendMessage,'Could not persist transfer.','error')}});
+$('copy-address').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(wallet.address);msg($('receive-message'),'Demo address copied.','success')}catch(_){msg($('receive-message'),'Select and copy the address above.','error')}});
+$('lock-wallet').addEventListener('click',()=>{wallet=null;passwordForSession=null;password.value='';confirmPassword.value='';vaultMode='unlock';showGate()});
+$('reset-wallet').addEventListener('click',()=>$('reset-dialog').showModal());
+$('confirm-reset').addEventListener('click',()=>{localStorage.removeItem(STORE_KEY);wallet=null;passwordForSession=null;vaultMode='create';showGate()});
+$('start-mining').addEventListener('click',async()=>{if(mining||!wallet)return;mining=true;const btn=$('start-mining');btn.disabled=true;const difficulty=Number($('difficulty').value),previous=chain.blocks[chain.blocks.length-1],transactions=chain.pending.splice(0),reward=500;transactions.push({type:'mining-reward',to:wallet.address,amountCents:reward,time:new Date().toISOString()});const block={height:previous.height+1,previousHash:previous.hash,timestamp:new Date().toISOString(),transactions,nonce:0,difficulty,rewardCents:reward,miner:wallet.address};const target='0'.repeat(difficulty);try{while(mining){const payload=JSON.stringify({height:block.height,previousHash:block.previousHash,timestamp:block.timestamp,transactions:block.transactions,nonce:block.nonce,difficulty:block.difficulty,miner:block.miner});block.hash=await hash(payload);if(block.hash.startsWith(target))break;block.nonce++;if(block.nonce%500===0){$('mining-status').textContent='Trying nonce '+block.nonce+'…';await new Promise(r=>setTimeout(r,0))}}if(!mining)throw Error('Mining cancelled');chain.blocks.push(block);wallet.balanceCents+=reward;wallet.transactions.push({type:'mining',recipient:'Block #'+block.height,amountCents:reward,time:block.timestamp,blockHeight:block.height});chainSave(chain);await save(passwordForSession);msg($('mining-status'),'Block #'+block.height+' mined · '+block.hash.slice(0,20)+'…','success');showWallet()}catch(err){chain.pending=transactions.filter(t=>t.type!=='mining-reward').concat(chain.pending);chainSave(chain);msg($('mining-status'),err.message||'Mining failed.','error')}finally{mining=false;btn.disabled=false;renderChain()}});
+$('stop-mining').addEventListener('click',()=>{mining=false});
+if(hasVault())vaultMode='unlock';showGate();
 })();
