@@ -74,7 +74,7 @@ if (year) year.textContent = new Date().getFullYear();
     const amountText = String(form.elements.amount.value || '').trim();
     const amount = Number(amountText);
     if (!recipient) { messageNode.textContent = 'Enter a recipient label or demo ID.'; messageNode.className = 'wallet-message error'; return; }
-    if (!Number.isFinite(amount) || amount <= 0 || !/^\\d+(\\.\\d{1,2})?$/.test(amountText)) {
+    if (!Number.isFinite(amount) || amount <= 0 || !/^\d+(\.\d{1,2})?$/.test(amountText)) {
       messageNode.textContent = 'Enter a valid amount with up to 2 decimal places.'; messageNode.className = 'wallet-message error'; return;
     }
     const cents = Math.round(amount * 100);
