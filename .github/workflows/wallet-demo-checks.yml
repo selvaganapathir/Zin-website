@@ -1,0 +1,52 @@
+name: ZIN wallet demo checks
+on:
+  push:
+    paths:
+      - 'wallet.html'
+      - 'wallet.css'
+      - 'wallet.js'
+      - 'index.html'
+      - '.github/workflows/wallet-demo-checks.yml'
+  pull_request:
+    paths:
+      - 'wallet.html'
+      - 'wallet.css'
+      - 'wallet.js'
+      - 'index.html'
+      - '.github/workflows/wallet-demo-checks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  wallet-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out website
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate wallet JavaScript syntax
+        run: node --check wallet.js
+      - name: Validate wallet page wiring and security primitives
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          html = Path("wallet.html").read_text()
+          js = Path("wallet.js").read_text()
+          css = Path("wallet.css").read_text()
+          home = Path("index.html").read_text()
+          assert 'href="wallet.css"' in html and 'src="wallet.js"' in html
+          assert 'href="wallet.html"' in home
+          assert 'PBKDF2' in js and "SHA-256" in js and "AES-GCM" in js
+          assert "localStorage.setItem(STORE_KEY" in js
+          assert "crypto.subtle.encrypt" in js and "crypto.subtle.decrypt" in js
+          assert 'id="send-form"' in html and 'id="receive-panel"' in html
+          assert "DEMO" in html and "simulation" in html.lower()
+          assert "fetch(" not in js and "XMLHttpRequest" not in js
+          assert len(css) > 1000
+          print("Wallet page wiring and local-encryption checks passed.")
+          PY
