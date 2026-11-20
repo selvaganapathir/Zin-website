@@ -16,7 +16,7 @@
 <body>
   <header class="wallet-header">
     <a class="brand" href="./" aria-label="ZIN home"><span class="brand-mark">Z</span><span>ZIN<span class="brand-dot">.</span></span></a>
-    <div class="header-right"><span class="network-pill"><i></i> DEMO MODE</span><a class="back-link" href="./">Back to website ↗</a></div>
+    <div class="header-right"><span class="network-pill"><i></i> DEMO MODE</span><a class="back-link" href="explorer.html">Testnet explorer ↗</a><a class="back-link" href="./">Website ↗</a></div>
   </header>
 
   <main class="app-shell">
@@ -34,13 +34,13 @@
         <label for="vault-confirm" id="confirm-label">Confirm password</label>
         <input id="vault-confirm" type="password" minlength="8" autocomplete="new-password" placeholder="Enter it again" required>
         <button class="primary-button" type="submit" id="vault-submit">Create encrypted vault <span>→</span></button>
-        <button class="text-button hidden" type="button" id="switch-vault-mode">I already have a vault · Unlock</button>
+        <button class="text-button hidden" type="button" id="switch-vault-mode">I already have a vault · Unlock</button>\n        <button class="text-button" type="button" id="restore-seed-mode">Restore with a ZIN demo recovery phrase</button>\n        <label for="recovery-phrase" id="recovery-label" class="hidden">24-word ZIN demo recovery phrase</label>\n        <textarea id="recovery-phrase" class="hidden" rows="4" autocomplete="off" spellcheck="false" placeholder="Enter your 24 demo recovery words, separated by spaces"></textarea>
         <p class="form-message" id="vault-message" role="status" aria-live="polite"></p>
       </form>
       <div class="crypto-note"><span>⌑</span> Password-based encryption · PBKDF2-SHA-256 + AES-256-GCM · Local browser storage</div>
     </section>
 
-    <section class="wallet-dashboard hidden" id="wallet-dashboard" aria-live="polite">
+    <section class="seed-reveal card hidden" id="seed-reveal" aria-live="polite"><div class="eyebrow">BACK UP YOUR DEMO WALLET</div><h2>Your ZIN demo recovery phrase</h2><p>Write these words down in order. This project-specific phrase restores this demo wallet on this browser. It is not BIP-39 and must never be used for real funds.</p><div class="seed-words" id="seed-words"></div><button class="secondary-button" id="copy-seed" type="button">Copy recovery phrase</button><label class="seed-confirm"><input id="seed-saved" type="checkbox"> I have saved these 24 words in the correct order</label><button class="primary-button" id="finish-seed" type="button" disabled>Continue to wallet →</button></section>\n\n    <section class="wallet-dashboard hidden" id="wallet-dashboard" aria-live="polite">
       <div class="dashboard-top"><div><span class="eyebrow">MY DEMO WALLET</span><h2>Portfolio</h2></div><button class="lock-button" id="lock-wallet" type="button">♙ Lock wallet</button></div>
       <article class="balance-card">
         <div class="balance-card-top"><span class="balance-label">TOTAL DEMO BALANCE</span><span class="coin-mark">Z</span></div>
