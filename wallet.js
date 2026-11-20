@@ -3,6 +3,28 @@
   const STORE_KEY = 'zin-wallet-vault-v2';
   const ITERATIONS = 310000;
   const encoder = new TextEncoder();
+  const WORD_ROOTS = ['amber','birch','cedar','delta','ember','frost','glade','harbor','ivory','juniper','kestrel','lunar','maple','north','ocean','prairie'];
+  const WORD_ENDS = ['able','age','air','ark','ash','bay','beam','bird','bliss','bloom','brook','calm','cape','crest','dawn','deer'];
+  const SEED_WORDS = WORD_ROOTS.flatMap(root => WORD_ENDS.map(end => root + end));
+  const makeSeedPhrase = () => Array.from(randomBytes(24), byte => SEED_WORDS[byte]).join(' ');
+  const parseSeedPhrase = phrase => {
+    const words = phrase.trim().toLowerCase().split(/\\s+/);
+    if (words.length !== 24) throw new Error('A ZIN demo recovery phrase must contain exactly 24 words.');
+    const entropy = words.map(word => { const index = SEED_WORDS.indexOf(word); if (index < 0) throw new Error('Unknown recovery word: ' + word); return index; });
+    return {words:words.join(' '),bytes:new Uint8Array(entropy)};
+  };
+  const addressFromSeed = async bytes => {
+    const digest = new Uint8Array(await crypto.subtle.digest('SHA-256',bytes));
+    return 'ZIN-DEMO-' + Array.from(digest.slice(0,20), b => b.toString(16).padStart(2,'0')).join('').toUpperCase();
+  };
+  const queueTestnetTransaction = tx => {
+    const key = 'zin-testnet-v1';
+    let state = {version:1,chain:[],pending:[],difficulty:3};
+    try { const saved = JSON.parse(localStorage.getItem(key) || 'null'); if (saved && Array.isArray(saved.chain) && Array.isArray(saved.pending)) state = saved; } catch (_) {}
+    state.pending.push(tx);
+    localStorage.setItem(key,JSON.stringify(state));
+  };
+
   const $ = id => document.getElementById(id);
   const gate = $('vault-gate');
   const dashboard = $('wallet-dashboard');
@@ -65,16 +87,29 @@
     $('gate-description').textContent = vaultMode === 'create'
       ? 'Protect this browser\'s simulated wallet data with a password. Your encrypted vault stays on this device.'
       : 'Enter the password you created for this browser\'s encrypted demo vault.';
-    $('password-label').textContent = vaultMode === 'create' ? 'Create a password' : 'Wallet password';
+    $('password-label').textContent = vaultMode === 'create' || vaultMode === 'restore' ? 'Create a password for this browser' : 'Wallet password';
     $('confirm-label').classList.toggle('hidden',vaultMode !== 'create');
-    confirmPassword.classList.toggle('hidden',vaultMode !== 'create');
-    confirmPassword.required = vaultMode === 'create';
-    password.autocomplete = vaultMode === 'create' ? 'new-password' : 'current-password';
-    $('vault-submit').innerHTML = vaultMode === 'create' ? 'Create encrypted vault <span>→</span>' : 'Unlock wallet <span>→</span>';
-    $('switch-vault-mode').classList.toggle('hidden',!hasVault() && vaultMode === 'create');
+    confirmPassword.classList.toggle('hidden',vaultMode !== 'create' && vaultMode !== 'restore');
+    $('confirm-label').classList.toggle('hidden',vaultMode !== 'create' && vaultMode !== 'restore');
+    confirmPassword.required = vaultMode === 'create' || vaultMode === 'restore';
+    password.autocomplete = vaultMode === 'unlock' ? 'current-password' : 'new-password';
+    $('vault-submit').innerHTML = vaultMode === 'unlock' ? 'Unlock wallet <span>→</span>' : (vaultMode === 'restore' ? 'Restore demo wallet <span>→</span>' : 'Create encrypted vault <span>→</span>');
+    $('switch-vault-mode').classList.toggle('hidden',!hasVault() || vaultMode === 'unlock');
+    $('restore-seed-mode').classList.toggle('hidden',vaultMode === 'restore');
+    $('recovery-label').classList.toggle('hidden',vaultMode !== 'restore');
+    $('recovery-phrase').classList.toggle('hidden',vaultMode !== 'restore');
+    $('recovery-phrase').required = vaultMode === 'restore';
     setMessage(gateMessage,'','');
   };
+  const showSeedReveal = () => {
+    gate.classList.add('hidden'); dashboard.classList.add('hidden');
+    const panel = $('seed-reveal'); panel.classList.remove('hidden');
+    const words = wallet.seedPhrase.split(' '); const grid = $('seed-words'); grid.replaceChildren();
+    words.forEach((word,index) => { const item=document.createElement('div'); item.className='seed-word'; const number=document.createElement('b'); number.textContent=String(index+1).padStart(2,'0'); item.append(number,document.createTextNode(word)); grid.append(item); });
+    $('seed-saved').checked=false; $('finish-seed').disabled=true;
+  };
   const showWallet = () => {
+    $('seed-reveal').classList.add('hidden');
     gate.classList.add('hidden');
     dashboard.classList.remove('hidden');
     $('wallet-balance').textContent = format(wallet.balanceCents);
