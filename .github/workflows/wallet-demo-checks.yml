@@ -4,7 +4,9 @@ on:
     paths:
       - 'wallet.html'
       - 'wallet.css'
-      - 'wallet.js'\n      - 'testnet.html'\n      - 'testnet.js'
+      - 'wallet.js'
+      - 'testnet.html'
+      - 'testnet.js'
       - 'index.html'
       - '.github/workflows/wallet-demo-checks.yml'
   pull_request:
@@ -12,6 +14,8 @@ on:
       - 'wallet.html'
       - 'wallet.css'
       - 'wallet.js'
+      - 'testnet.html'
+      - 'testnet.js'
       - 'index.html'
       - '.github/workflows/wallet-demo-checks.yml'
   workflow_dispatch:
@@ -30,7 +34,9 @@ jobs:
         with:
           node-version: '22'
       - name: Validate wallet JavaScript syntax
-        run: node --check wallet.js
+        run: |
+          node --check wallet.js
+          node --check testnet.js
       - name: Validate wallet page wiring and security primitives
         run: |
           python3 - <<'PY'
@@ -40,7 +46,15 @@ jobs:
           css = Path("wallet.css").read_text()
           home = Path("index.html").read_text()
           assert 'href="wallet.css"' in html and 'src="wallet.js"' in html
-          explorer = Path("testnet.html").read_text()\n          explorer_js = Path("testnet.js").read_text()\n          assert 'href="wallet.html"' in home\n          assert 'href="testnet.html"' in home\n          assert 'id="restore-wallet"' in html and 'id="recovery-phrase"' in html\n          assert 'id="difficulty"' in html and 'id="start-mining"' in html\n          assert 'id="results"' in explorer and 'id="search"' in explorer\n          assert 'localStorage' in explorer_js and 'zin-testnet-chain-v1' in explorer_js\n          assert 'testnet.html' in home
+          explorer = Path("testnet.html").read_text()
+          explorer_js = Path("testnet.js").read_text()
+          assert 'href="wallet.html"' in home
+          assert 'href="testnet.html"' in home
+          assert 'id="restore-wallet"' in html and 'id="recovery-phrase"' in html
+          assert 'id="difficulty"' in html and 'id="start-mining"' in html
+          assert 'id="results"' in explorer and 'id="search"' in explorer
+          assert 'localStorage' in explorer_js and 'zin-testnet-chain-v1' in explorer_js
+          assert 'testnet.html' in home
           assert 'PBKDF2' in js and "SHA-256" in js and "AES-GCM" in js
           assert "localStorage.setItem(STORE_KEY" in js
           assert "crypto.subtle.encrypt" in js and "crypto.subtle.decrypt" in js
@@ -48,5 +62,6 @@ jobs:
           assert "DEMO" in html and "simulation" in html.lower()
           assert "fetch(" not in js and "XMLHttpRequest" not in js
           assert len(css) > 1000
-          assert 'repeat(4,minmax(0,1fr))' in css\n          print("Wallet, recovery, mining, explorer and local-encryption checks passed.")
+          assert 'repeat(4,minmax(0,1fr))' in css
+          print("Wallet, recovery, mining, explorer and local-encryption checks passed.")
           PY
