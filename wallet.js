@@ -130,7 +130,7 @@
       } else {
         await unlockEncrypted(secret);
       }
-      password.value = ''; confirmPassword.value = ''; showWallet();
+      passwordForSession = secret; password.value = ''; confirmPassword.value = ''; showWallet();
     } catch (error) {
       wallet = null;
       const message = vaultMode === 'unlock' && error.name === 'OperationError' ? 'Incorrect password. Please try again.' : (error.message || 'Could not open the wallet vault.');
@@ -163,9 +163,6 @@
   });
 
   let passwordForSession = null;
-  const originalShowWallet = showWallet;
-  const unlockSubmit = form;
-  unlockSubmit.addEventListener('submit',() => { passwordForSession = password.value; },true);
   $('copy-address').addEventListener('click',async () => {
     try { await navigator.clipboard.writeText(wallet.address); setMessage($('receive-message'),'Demo address copied.','success'); }
     catch (_) { setMessage($('receive-message'),'Clipboard unavailable. Select and copy the address above.','error'); }
