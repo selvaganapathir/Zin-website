@@ -4,7 +4,7 @@
 
 **A mobile-first blockchain project, developed transparently and incrementally.**
 
-[Open the live website](https://selvaganapathir.github.io/Zin-website/) · [Open wallet demo](https://selvaganapathir.github.io/Zin-website/wallet.html) · [Open local testnet explorer](https://selvaganapathir.github.io/Zin-website/testnet.html)
+[Open the live website](https://selvaganapathir.github.io/Zin-website/) · [Open wallet demo](https://selvaganapathir.github.io/Zin-website/wallet.html) · [Open local testnet explorer](https://selvaganapathir.github.io/Zin-website/testnet.html) · [Development progress](https://selvaganapathir.github.io/Zin-website/progress.html)
 
 </div>
 
