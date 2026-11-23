@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090d18">
+  <meta name="description" content="A transparent engineering progress report for the experimental ZIN blockchain project.">
+  <title>ZIN — Development Progress</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .progress-hero{padding:100px 7vw 55px;background:radial-gradient(ellipse at 80% 10%,rgba(88,95,220,.2),transparent 45%)}
+    .progress-wrap{max-width:1080px;margin:auto;padding:20px 7vw 100px}
+    .progress-intro{max-width:760px;color:#aab2c7;line-height:1.8}
+    .progress-notice{border:1px solid rgba(255,190,90,.35);background:rgba(255,190,90,.07);padding:20px 24px;border-radius:14px;margin:28px 0 42px;color:#e7d8b8;line-height:1.7}
+    .progress-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:16px}
+    .progress-card{border:1px solid rgba(150,165,210,.16);background:rgba(255,255,255,.025);border-radius:16px;padding:24px}
+    .progress-card .tag{font-size:11px;letter-spacing:.14em;color:#8f9aff}
+    .progress-card h2{font-size:21px;margin:12px 0}
+    .progress-card ul{padding-left:19px;color:#aab2c7;line-height:1.75}
+    .progress-foot{color:#aab2c7;line-height:1.8;margin-top:38px}
+    .progress-links a{margin-right:18px}
+    @media(max-width:600px){.progress-hero{padding-top:70px}.progress-card{padding:20px}}
+  </style>
+</head>
+<body>
+  <div class="announcement"><span class="pulse"></span> ENGINEERING UPDATE · EXPERIMENTAL PROJECT</div>
+  <header class="site-header">
+    <a class="brand" href="index.html"><span class="brand-mark">Z</span><span>ZIN<span class="brand-dot">.</span></span></a>
+    <nav class="nav" aria-label="Main navigation">
+      <a href="index.html#vision">Vision</a><a href="index.html#technology">Technology</a><a href="index.html#roadmap">Roadmap</a><a href="index.html#status">Status</a><a href="progress.html" aria-current="page">Progress</a><a href="wallet.html">Wallet & Miner</a><a href="testnet.html">Testnet Explorer</a>
+      <a class="nav-cta" href="https://github.com/selvaganapathir/zin-blockchain/pulls" target="_blank" rel="noopener">Engineering PRs ↗</a>
+    </nav>
+  </header>
+  <main>
+    <section class="progress-hero">
+      <div class="section-kicker">ZIN ENGINEERING JOURNAL</div>
+      <h1>Development <span class="gradient-text">progress.</span></h1>
+      <p class="progress-intro">A summary of the protocol research, blockchain components, storage, networking and developer tooling developed in the ZIN source repository.</p>
+      <p class="progress-intro"><strong>Last updated: 23 November 2026</strong></p>
+    </section>
+    <section class="progress-wrap">
+      <div class="progress-notice"><strong>Read this status carefully:</strong> The work below exists across development branches and draft, unmerged pull requests. It is not one integrated production release. Automated tests passing for individual components do not establish that a complete independent ZIN network is operational. Review the <a href="https://github.com/selvaganapathir/zin-blockchain/pulls" target="_blank" rel="noopener">open pull requests</a> for implementation status.</div>
+      <div class="progress-grid">
+        <article class="progress-card"><span class="tag">01 / PROTOCOL & ECONOMICS</span><h2>Protocol foundations</h2><ul><li>Draft Layer-1 consensus specification and unresolved decision register</li><li>Integer-only subsidy and halving reference model with exact supply arithmetic</li><li>SHA-256d proof-of-work and compact-target research</li><li>ASERT and LWMA-1 reference work, vectors and comparison simulations</li><li>Timestamp manipulation, reorganisation and adversarial-condition tests</li></ul></article>
+        <article class="progress-card"><span class="tag">02 / BLOCKCHAIN CORE</span><h2>Headers, transactions & chainstate</h2><ul><li>80-byte block-header serialization and parsing</li><li>Proof-of-work checks, parent linkage and cumulative chainwork groundwork</li><li>Transaction serialization, txids and UTXO validation</li><li>Atomic block-application and Merkle-root validation groundwork</li><li>Greater-work fork-choice and branch persistence research</li></ul></article>
+        <article class="progress-card"><span class="tag">03 / SCRIPT & WITNESS</span><h2>Cryptographic validation</h2><ul><li>secp256k1 ECDSA verification primitives</li><li>Witness serialization, txid/wtxid and BIP143 signature-hash work</li><li>BIP141 witness commitment validation</li><li>SegWit-v0 P2WPKH/P2WSH multi-input verification groundwork</li><li>Opt-in witness-verified block execution gate</li></ul></article>
+        <article class="progress-card"><span class="tag">04 / STORAGE</span><h2>Persistence & diagnostics</h2><ul><li>SQLite persistent block-body storage with bounded capacity</li><li>Persistent UTXO chainstate snapshots and branch-recovery groundwork</li><li>Persistent peer-address book</li><li>Read-only database integrity and node health diagnostics</li></ul></article>
+        <article class="progress-card"><span class="tag">05 / P2P NETWORKING</span><h2>Peer connectivity & synchronization</h2><ul><li>TCP transport, message framing and peer handshake</li><li>Address discovery, exchange and outbound peer connection</li><li>Bounded reconnect and persistent peer hints</li><li>Automatic header and block-body synchronization</li><li>Multi-node block and transaction relay</li><li>Stalled-download retry, alternate-peer failover and queued-work recovery</li></ul></article>
+        <article class="progress-card"><span class="tag">06 / RELIABILITY & ABUSE CONTROLS</span><h2>Network hardening groundwork</h2><ul><li>Unified peer limits and bounded message queues/backpressure</li><li>Cancellation-safe connection cleanup and node shutdown/restart tests</li><li>Address-ingestion and getaddr amplification limits</li><li>Future-dated address rejection and ping-flood limits</li><li>Temporary in-memory peer reputation controls</li><li>Operator-configured, bounded DNS seed discovery</li></ul></article>
+        <article class="progress-card"><span class="tag">07 / DEVELOPER EXPERIENCE</span><h2>Tooling & automated checks</h2><ul><li>Developer CLI and node diagnostics</li><li>Focused test suites for protocol and networking components</li><li>GitHub Actions workflows for regression and preview checks</li><li>Upstream Bitcoin Core v32.1 regtest build/transaction smoke test for reference only—not a ZIN node</li></ul></article>
+      </div>
+      <div class="progress-foot">
+        <h2>What is not live yet</h2>
+        <ul><li>No public ZIN testnet or mainnet</li><li>No independently operating ZIN peer-to-peer network</li><li>No production-ready full node or audited real-funds wallet</li><li>No real-value ZIN coin or public mining network</li><li>Consensus parameters, complete script/consensus conformance, integration, security review and independent audits remain outstanding</li></ul>
+        <p>The website wallet and explorer are browser-local demonstrations. Their data is not shared between visitors and they do not connect to a live ZIN network.</p>
+        <p class="progress-links"><a href="index.html#status">Project status</a><a href="https://github.com/selvaganapathir/zin-blockchain/pulls" target="_blank" rel="noopener">Review development PRs ↗</a><a href="https://github.com/selvaganapathir/zin-blockchain" target="_blank" rel="noopener">Blockchain repository ↗</a></p>
+      </div>
+    </section>
+  </main>
+  <footer class="footer"><a class="brand" href="index.html"><span class="brand-mark">Z</span><span>ZIN<span class="brand-dot">.</span></span></a><span>© <span id="year"></span> ZIN Project · Experimental development</span><a href="#">Back to top ↑</a></footer>
+  <script src="script.js"></script>
+</body>
+</html>
